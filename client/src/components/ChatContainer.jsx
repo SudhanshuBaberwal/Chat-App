@@ -1,43 +1,49 @@
 import { useChatStore } from "../store/useChatStore";
 import { useEffect, useRef } from "react";
-import ChatHeader from "./CharHeader"
-import MessageInput from "./MessageInput";
-import MessageSkeleton from "./skeletons/MessageSkeleton";
+import CharHeader from "./CharHeader"
+import MessageInput from "./MessageInput"
+import MessageSkeleton from "./skeletons/MessageSkeleton"
 import { useAuthStore } from "../store/userAuthStore";
-import { formatMessageTime } from "../lib/utils"; 
+import formatmessagesTime from "../lib/utils.js"
 
 const ChatContainer = () => {
   const {
     messages,
     getMessages,
-    isMessagesLoading,
+    isMessageLoading,
     selectedUser,
-    subscribeToMessages,
-    unsubscribeFromMessages,
+    subscriberToMessage,
+    unSubscriberToMessage,
   } = useChatStore();
 
   const { authUser } = useAuthStore();
-  const messageEndRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
-   useEffect(() => {
-    getMessages(selectedUser._id);
+  useEffect(() => {
+  if (!selectedUser?._id) return;  // stop if no user selected
+  getMessages(selectedUser._id);
+  subscriberToMessage();
+  return () => unSubscriberToMessage();
+}, [selectedUser?._id, getMessages, subscriberToMessage, unSubscriberToMessage]);
+  //  useEffect(() => {
+  //   getmessages(selectedUser._id);
 
-    subscribeToMessages();
+  //   subscriberToMessage();
 
-    return () => unsubscribeFromMessages();
-  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+  //   return () => unSubscriberToMessage();
+  // }, [selectedUser._id, getmessages, subscriberToMessage, unSubscriberToMessage]);
 
 
   useEffect(() => {
-    if (messageEndRef.current && messages) {
-      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current && messages) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
-  if (isMessagesLoading) {
+  if (isMessageLoading) {
     return (
       <div className="flex-1 flex flex-col overflow-auto">
-        <ChatHeader />
+        <CharHeader />
         <MessageSkeleton />
         <MessageInput />
       </div>
@@ -47,22 +53,22 @@ const ChatContainer = () => {
   
   return (
     <div className="flex-1 flex flex-col overflow-auto">
-      <ChatHeader />
+      <CharHeader />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
+        {Array.isArray(messages) && messages.map((messages) => (
           <div
-            key={message._id}
+            key={messages._id}
             className={`chat ${
-              message.senderId === authUser._id ? "chat-end" : "chat-start"
+              messages.senderId === authUser._id ? "chat-end" : "chat-start"
             }`}
-            ref={messageEndRef}
+            ref={messagesEndRef}
           >
             <div className=" chat-image avatar">
               <div className="size-10 rounded-full border">
                 <img
                   src={
-                    message.senderId === authUser._id
+                    messages.senderId === authUser._id
                       ? authUser.profilePic || "/avatar.png"
                       : selectedUser.profilePic || "/avatar.png"
                   }
@@ -72,18 +78,18 @@ const ChatContainer = () => {
             </div>
             <div className="chat-header mb-1">
               <time className="text-xs opacity-50 ml-1">
-                {formatMessageTime(message.createdAt)}
+                {formatmessagesTime(messages.createdAt)}
               </time>
             </div>
             <div className="chat-bubble flex flex-col">
-              {message.image && (
+              {messages.image && (
                 <img
-                  src={message.image}
+                  src={messages.image}
                   alt="Attachment"
                   className="sm:max-w-[200px] rounded-md mb-2"
                 />
               )}
-              {message.text && <p>{message.text}</p>}
+              {messages.text && <p>{messages.text}</p>}
             </div>
           </div>
         ))}

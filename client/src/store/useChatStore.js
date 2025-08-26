@@ -7,7 +7,7 @@ import { useAuthStore } from "./userAuthStore.js";
 export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
-  selectdUser: null,
+  selectedUser: null,
   isUsersLoading: false,
   isMessageLoading: false,
 
@@ -25,31 +25,49 @@ export const useChatStore = create((set, get) => ({
   getMessages: async (userId) => {
     set({ isMessageLoading: true });
     try {
-      const res = await axiosInstance.get(`/message/${userId}`);
-      set({ message: res.data });
+      const res = await axiosInstance.get(`/messages/${userId}`);
+      set({ messages: res.data });
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response.data.messages);
     } finally {
       set({ isMessageLoading: false });
     }
   },
 
+  // sendMessage: async (messageData) => {
+  //   const { selectedUser, messages } = get();
+  //   try {
+  //     const res = await axiosInstance.post(
+  //       `/messages/send/${selectedUser._id}`,
+  //       messageData
+  //     );
+  //     set({ messages: [...messages, res.data] });
+  //   } catch (error) {
+  //     // toast.error(error.response.data.messages);
+  //     console.log(error)
+  //     toast.error(error.response?.data?.message || "Failed to send message");
+  //   }
+  // },
   sendMessage: async (messageData) => {
-    const { selectdUser, messages } = get();
-    try {
-      const res = await axiosInstance.post(
-        `/messages/send/${selectdUser._id}`,
-        messageData
-      );
-      set({ messages: [...messages, res.data] });
-    } catch (error) {
-      toast.error(error.response.data.message);
-    }
-  },
+  const { selectedUser, messages } = get();
+  try {
+    const res = await axiosInstance.post(
+      `/messages/send/${selectedUser._id}`,
+      messageData
+    );
+
+    // Ensure messages is always an array
+    const safeMessages = Array.isArray(messages) ? messages : [];
+
+    set({ messages: [...safeMessages, res.data] });
+  } catch (error) {
+    toast.error(error.response?.data?.error || "Failed to send message");
+  }
+},
 
   subscriberToMessage: () => {
-    const { selectdUser } = get();
-    if (!selectdUser) return;
+    const { selectedUser } = get();
+    if (!selectedUser) return;
     const socket = useAuthStore.getState().socket;
 
     socket.on("newMessage", (newMessage) => {
@@ -64,5 +82,16 @@ export const useChatStore = create((set, get) => ({
     socket.off("newMessage");
   },
 
-  setSelectedUser: (selectdUser) => set({ selectdUser }),
+  setSelectedUser: async (selectedUser) => {
+  set({ selectedUser, messages: [] }); // reset old messages
+  if (selectedUser) {
+    try {
+      const res = await axiosInstance.get(`/messages/${selectedUser._id}`);
+      set({ messages: res.data });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to load messages");
+    }
+  }
+},
+
 }));
