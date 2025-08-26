@@ -5,9 +5,11 @@ import dotenv from "dotenv"
 import { connectDB } from "./src/lib/db.js"
 import cookieParser from "cookie-parser"
 import cors from "cors"
+import { app , server } from "./src/lib/scoket.js"
 
 
-const app = express()
+// const app = express()
+
 dotenv.config()
 app.use(express.json())
 app.use(express.json({ limit: "10mb" }));
@@ -27,7 +29,7 @@ app.get("/" , (req , res) => {
 app.use("/api/auth" , authRouter)
 app.use("/api/messages" , messageRoutes)
 
-app.listen(port , ()=> {
+server.listen(port , ()=> {
     console.log(`server running properly on port : ${port}`);
     connectDB()
 })
