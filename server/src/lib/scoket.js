@@ -3,7 +3,7 @@ import http from "http"
 import express from "express"
 
 const app = express()
-const server = http.createServer(app)
+const server = http.createServer(app);
 
 const io = new Server(server , {
     cors : {
@@ -15,9 +15,9 @@ export function getReceiverSocketId(userId) {
     return userSocketMap[userId];
 }
 
+const userSocketMap = {};
 
 // used  to store online uesrs
-const userSocketMap = {};
 
 
 io.on("connection" , (socket) => {

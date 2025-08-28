@@ -9,19 +9,21 @@ const Sidebar = () => {
   const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } =
     useChatStore();
 
-    // const onlineUsers = [];
-  
+  // const onlineUsers = [];
+
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+
   useEffect(() => {
     getUsers();
   }, [getUsers]);
 
-  if (isUsersLoading) return <SidebarSkeleton />;
 
-   const filteredUsers = showOnlineOnly
-    ? users.filter((user) => onlineUsers.includes(user._id))
-    : users;
+  const filteredUsers = showOnlineOnly
+  ? users.filter((user) => onlineUsers.includes(user._id))
+  : users;
+  
+  if (isUsersLoading) return <SidebarSkeleton />;
   return (
     <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
       <div className="border-b border-base-300 w-full p-5">
@@ -41,7 +43,7 @@ const Sidebar = () => {
             <span className="text-sm">Show online only</span>
           </label>
           <span className="text-xs text-zinc-500">
-            ({Math.max(0, onlineUsers.length - 1)} online)
+            ({onlineUsers.length - 1} online)
           </span>
         </div>
       </div>
@@ -84,7 +86,6 @@ const Sidebar = () => {
             </div>
           </button>
         ))}
-
         {filteredUsers.length === 0 && (
           <div className="text-center text-zinc-500 py-4">No online users</div>
         )}
